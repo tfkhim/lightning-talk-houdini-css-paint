@@ -1,0 +1,12 @@
+.checkerboard {
+  height: 100%;
+  width: 100%;
+  background-image: paint(checkerboard);
+}
+
+.gradientMask {
+  height: 100%;
+  width: 100%;
+  mask-image: paint(linear_gradient);
+  -webkit-mask-image: paint(linear_gradient);
+}

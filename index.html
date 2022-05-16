@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Houdini's Tricks</title>
+
+    <!--
+      There seems to be a bug with the polyfill and CSS included by Vite. The
+      polyfill doesn't replace the paint(...) in all cases. Including the CSS
+      file like this just works fine.
+    -->
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>Houdini's Tricks</h1>
+        </section>
+
+        <section>
+          <section>
+            <h3>No, not this one</h3>
+            <img
+              class="r-stretch"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/HarryHoudini1899.jpg/440px-HarryHoudini1899.jpg"
+            />
+          </section>
+
+          <section>
+            <h3>But this one</h3>
+            <img
+              class="r-stretch"
+              src="https://camo.githubusercontent.com/119b29ca4b9d31cf3969a94eb57fcfbbea0879b493c09c89dc6d4b7fb9e0dc37/68747470733a2f2f63646e2e776f726c64766563746f726c6f676f2e636f6d2f6c6f676f732f6373732d332e737667"
+            />
+            <h2>CSS</h2>
+          </section>
+        </section>
+
+        <section>
+          <h3>An API for the CSS engine</h3>
+          <p>Custom properties, painting, layouts, ...</p>
+        </section>
+
+        <section>
+          <section>
+            <h3>Paint Worklet</h3>
+            <p>
+              Implement painting functions which can be used everywhere CSS
+              expects an image
+            </p>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape>
+              &lt;script&gt;
+                CSS.paintWorklet.addModule('./paint_worklets.js');
+              &lt;/script&gt;
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>Draw a checkerboard background</h3>
+            <pre><code data-trim><script type="text/template">
+            registerPaint('checkerboard', class {
+              paint(ctx, geom, properties) {
+                const numColumns = Math.floor(geom.width / 30)
+                const numRows = Math.floor(geom.height / 30)
+                const evenStyle = 'grey';
+                const oddStyle = 'lightblue';
+                for(let row = 0; row < numRows; row++) {
+                  for(let column = 0; column < numColumns; column++) {
+                    const isEvenStyle = (column + row) % 2 == 0
+                    ctx.fillStyle = isEvenStyle ? evenStyle : oddStyle
+                    ctx.fillRect(column*30, row*30, 30, 30)
+                  }
+                }
+              }
+            })
+            </script></code></pre>
+            <pre><code data-trim data-noescape><script type="text/template">
+            .checkerboard {
+              background-image: paint(checkerboard);
+            }
+          </script></code></pre>
+          </section>
+
+          <section>
+            <div class="r-stretch">
+              <div class="checkerboard"></div>
+            </div>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>Use a mask image</h3>
+            <pre><code data-trim data-noescape><script type="text/template">
+            registerPaint('linear_gradient', class {
+              paint(ctx, geom, properties) {
+                const gradient = ctx.createLinearGradient(
+                  0, 0, geom.width, geom.height
+                )
+                gradient.addColorStop(0.1, 'rgba(0, 0, 0, 0)')
+                gradient.addColorStop(0.5, 'rgba(0, 0, 0, 1)')
+                gradient.addColorStop(0.9, 'rgba(0, 0, 0, 0)')
+  
+                ctx.fillStyle = gradient
+                ctx.fillRect(0, 0, geom.width, geom.height)
+              }
+            })
+            </script></code></pre>
+            <pre><code data-trim data-noescape><script type="text/template">
+            .gradientMask {
+              mask-image: paint(radial_gradient);
+              -webkit-mask-image: paint(radial_gradient);
+            }
+          </script></code></pre>
+          </section>
+
+          <section>
+            <div class="r-stretch">
+              <div class="gradientMask">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sed
+                libero vitae dolor cursus elementum. Nullam interdum massa sem.
+                Donec eu sem pharetra, gravida ante et, gravida libero.
+                Curabitur fringilla fermentum ornare. Quisque at justo ornare,
+                tincidunt nulla quis, lobortis orci. Sed eget elit vitae tortor
+                dapibus ornare in et dolor. In posuere diam ut nisl condimentum,
+                eu dapibus leo consectetur. Sed mollis finibus mattis. Praesent
+                varius, ipsum dignissim laoreet fermentum, neque elit volutpat
+                odio, eu fermentum elit augue vitae justo. Nam et suscipit urna.
+                Fusce vel ultrices tortor. Maecenas dui elit, dapibus ac eros
+                eu, finibus bibendum purus. Mauris sed quam in est sollicitudin
+                volutpat.
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section>
+          <h3>Why?</h3>
+          <blockquote
+            cite="https://developer.mozilla.org/en-US/docs/Web/Guide/Houdini"
+          >
+            [...] thereby creating new CSS features without waiting for them to
+            be implemented natively in browsers.
+          </blockquote>
+          <cite><a href="" style="font-size: large">MDN Web Docs</a></cite>
+        </section>
+
+        <section>
+          <section>
+            <h3>Are we Houdini yet?</h3>
+          </section>
+
+          <section>
+            <img class="r-stretch" src="/houdini_support.png" />
+            <cite
+              ><a href="https://ishoudinireadyyet.com" style="font-size: large"
+                >https://ishoudinireadyyet.com</a
+              ></cite
+            >
+          </section>
+
+          <section>
+            <p>
+              But there is a
+              <a href="https://github.com/GoogleChromeLabs/css-paint-polyfill"
+                >polyfill</a
+              >
+            </p>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>
